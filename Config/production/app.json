@@ -1,0 +1,8 @@
+{
+	"signing_secret": "9N5kyrt3rtsB7FQMewyhWnLGjQ2OdmAdX1lsEc5CJ6Ey68m3pkEtLU7HwUSSnsf7",
+	"token_valid_duration": 2592000,
+	"refresh_token_valid_duration": 30758400,
+	"mail_api_url": "https://api.mailgun.net/v3/mg.onnozelheid.nl/messages",
+	"mail_api_key": "key-ae711c11cdf2c1f29a0ba804d906420e",
+	"host": "$host:http://localhost:8090"
+}

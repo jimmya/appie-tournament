@@ -1,0 +1,40 @@
+#extend("base")
+
+#export("head") {
+	<title>Tournament</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,300" rel="stylesheet">
+	<link rel="stylesheet" href="/styles/app.css">
+}
+
+#export("body") {
+  #raw() {
+      <div class="container-fluid">
+				<h3>Approve matches</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Team 1:</th>
+            <th>Team 1 score:</th>
+						<th>Team 2:</th>
+            <th>Team 2 score:</th>
+						<th>Approve</th>
+          </tr>
+        </thead>
+        <tbody>
+  }
+  #loop(matches, "match") {
+          <tr>
+            <td>#(match.team_one_name)</td>
+            <td>#(match.team_one_score)</td>
+						<td>#(match.team_two_name)</td>
+            <td>#(match.team_two_score)</td>
+						<td><form method="POST" action="/matches/#(match.id)/approve"><button type="submit" class="btn btn-default">Approve</button></form></td>
+          </tr>
+  }
+  #raw() {
+        </tbody>
+      </table>
+    </div>
+  }
+}

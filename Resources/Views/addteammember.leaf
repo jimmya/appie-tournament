@@ -1,0 +1,29 @@
+#extend("base")
+
+#export("head") {
+	<title>Tournament</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,300" rel="stylesheet">
+	<link rel="stylesheet" href="/styles/app.css">
+}
+
+#export("body") {
+	#raw() {
+		<div class="container-fluid">
+			<h3>Add member</h3>
+			<form action="" method="POST">
+			  <div class="form-group">
+					<label for="member">Member:</label>
+					<select class="form-control" name="member" id="member">
+	}
+	#loop(users, "user") {
+			<option value="#(user.id)">#(user.username)</option>
+	}
+	#raw() {
+					</select>
+			  </div>
+			  <button type="submit" class="btn btn-default">Add</button>
+			</form>
+		</div>
+	}
+}
