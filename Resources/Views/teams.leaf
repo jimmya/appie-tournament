@@ -1,0 +1,38 @@
+#extend("base")
+
+#export("head") {
+	<title>Tournament</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,300" rel="stylesheet">
+	<link rel="stylesheet" href="/styles/app.css">
+}
+
+#export("body") {
+  #raw() {
+      <div class="container-fluid">
+        <h3>Teams</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+						<th>#</th>
+            <th>Team</th>
+						<th>Members</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+  }
+  #loop(teams, "team") {
+          <tr>
+						<td>#(team.position)</td>
+            <td>#(team.name)</td>
+						<td>#(team.memberNames)</td>
+            <td>#(team.score)</td>
+          </tr>
+  }
+  #raw() {
+        </tbody>
+      </table>
+    </div>
+  }
+}

@@ -1,0 +1,42 @@
+#extend("base")
+
+#export("head") {
+	<title>Tournament</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,300" rel="stylesheet">
+	<link rel="stylesheet" href="/styles/app.css">
+}
+
+#export("body") {
+  #raw() {
+      <div class="container-fluid">
+        <h3>Teams</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+						<th>#</th>
+            <th>Team</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+  }
+  #loop(teams, "team") {
+          <tr>
+						<td>#(team.position)</td>
+            <td>#(team.name)</td>
+            <td>#(team.score)</td>
+						<td>
+							<a class="btn btn-default" href="/admin/teams/#(team.id)/members" role="button">Add members</a>
+							<a class="btn btn-default" href="/admin/teams/#(team.id)" role="button">View details</a>
+						</td>
+          </tr>
+  }
+  #raw() {
+        </tbody>
+      </table>
+			<br />
+			<a class="btn btn-default" href="/admin/teams/add" role="button">Add team</a>
+    </div>
+  }
+}
