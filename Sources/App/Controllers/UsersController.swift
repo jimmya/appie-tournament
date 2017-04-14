@@ -9,15 +9,15 @@ import Cookies
 import Fluent
 
 final class UsersController: ResourceRepresentable {
-    
+
     let renderer: Vapor.ViewRenderer
     let logger: LogProtocol
-    
+
     init(renderer: Vapor.ViewRenderer, logger: LogProtocol) {
         self.renderer = renderer
         self.logger = logger
     }
-    
+
     func index(request: Request) throws -> ResponseRepresentable {
         do {
             _ = try request.user()
@@ -30,7 +30,7 @@ final class UsersController: ResourceRepresentable {
             throw Abort.badRequest
         }
     }
-    
+
     func create(request: Request) throws -> ResponseRepresentable {
         guard let username = request.data["username"]?.string,
             let password = request.data["password"]?.string,
@@ -45,7 +45,7 @@ final class UsersController: ResourceRepresentable {
         guard let team = try Team.find(teamId) else {
             return Response(redirect: "/users").flash(.error, "Team not found")
         }
-        
+
         let credentials = UsernamePassword(username: username, password: password)
         var user: User?
         do {
@@ -56,9 +56,11 @@ final class UsersController: ResourceRepresentable {
         guard var unwrappedUser = user else {
             return Response(redirect: "/users").flash(.error, "Something went wrong, please try again")
         }
-        let existingUsernameCount = try User.query().filter("username", username).count()
-        let existingEmailCount = try User.query().filter("email", email).count()
-        guard existingUsernameCount == 0 && existingEmailCount == 0 else {
+        let existingUserCount = try User.query().or({ (query) in
+            try query.filter("username", username)
+            try query.filter("email", email)
+        }).count()
+        guard existingUserCount == 0 else {
             return Response(redirect: "/users").flash(.error, "A user with these credentials allready exists")
         }
         do {
@@ -72,7 +74,7 @@ final class UsersController: ResourceRepresentable {
             return Response(redirect: "/users").flash(.error, "Invalid emailadress")
         }
     }
-    
+
     func makeResource() -> Resource<User> {
         return Resource(
             index: index,
@@ -82,7 +84,7 @@ final class UsersController: ResourceRepresentable {
 }
 
 extension UsersController {
-    
+
     func login(request: Request) throws -> ResponseRepresentable {
         guard let email = request.data["email"]?.string,
             let password = request.data["password"]?.string else {
@@ -104,7 +106,7 @@ extension UsersController {
             return Response(redirect: "/users/login").flash(.error, "Invalid login credentials")
         }
     }
-    
+
     func getLogin(request: Request) throws -> ResponseRepresentable {
         if request.accept.prefers("html") {
             return try renderer.make("login", for: request)
@@ -114,14 +116,14 @@ extension UsersController {
 }
 
 extension UsersController {
-    
+
     func getRequestResetPassword(request: Request) throws -> ResponseRepresentable {
         if request.accept.prefers("html") {
             return try renderer.make("requestresetpassword", for: request)
         }
         throw Abort.badRequest
     }
-    
+
     func requestResetPassword(request: Request) throws -> ResponseRepresentable {
         guard let email = request.data["email"]?.string else {
             return Response(redirect: "/users/requestresetpassword").flash(.error, "Please fill in all fields")
@@ -149,7 +151,7 @@ extension UsersController {
 }
 
 extension UsersController {
-    
+
     func getResetPassword(request: Request) throws -> ResponseRepresentable {
         guard request.accept.prefers("html") else {
             throw Abort.badRequest
@@ -158,7 +160,7 @@ extension UsersController {
         request.storage["token"] = request.query?["token"]
         return try renderer.make("resetpassword", for: request)
     }
-    
+
     func resetPassword(request: Request) throws -> ResponseRepresentable {
         guard let email = request.data["email"]?.string,
             let tokenString = request.data["token"]?.string,
@@ -192,14 +194,14 @@ extension UsersController {
         try token.delete()
         return Response(redirect: "/users/login").flash(.success, "You password has been changed")
     }
-    
+
     func logout(request: Request) throws -> ResponseRepresentable {
         let response = Response(redirect: "/teams")
         let cookie = Cookie(name: "login", value: "", expires: Date())
         response.cookies.insert(cookie)
         return response
     }
-    
+
     func confirmEmail(request: Request) throws -> ResponseRepresentable {
         guard let token = request.query?["token"] else {
             return Response(redirect: "/users/requestconfirmemail").flash(.error, "This verification token has expired, enter your emailadress below to request a new confirmation email.")
@@ -220,7 +222,7 @@ extension UsersController {
         try userSession.delete()
         return Response(redirect: "/users/login").flash(.success, "Your account has been verified")
     }
-    
+
     func requestConfirmEmail(request: Request) throws -> ResponseRepresentable {
         guard let email = request.query?["email"] else {
             try request.flash.add(.info, "Enter your email below to request a new confirmation email")
@@ -238,7 +240,7 @@ extension UsersController {
         guard let token = userSession.uuid else {
             throw Abort.serverError
         }
-        
+
         let config = Droplet().config
         let host = config["app", "host"]?.string ?? "http://localhost:8090"
         let subject = "Confirm account"
