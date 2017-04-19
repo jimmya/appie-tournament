@@ -60,6 +60,17 @@ extension MatchesController {
             var teamTwo = try Team.find(teamTwoId) else {
                 throw Abort.notFound
         }
+        guard let matchTimestamp = match.timestamp else {
+            throw Abort.serverError
+        }
+        
+        let teamOneMatches = try Match.query().filter("team_two_id", teamOneId).filter("approved", false.makeNode()).filter("timestamp", .lessThan, matchTimestamp).all()
+        let teamTwoMatches = try Match.query().filter("team_two_id", teamTwoId).filter("approved", false.makeNode()).filter("timestamp", .lessThan, matchTimestamp).all()
+        if teamOneMatches.count > 0 {
+            return Response(redirect: "/matches/approve").flash(.error, "The team \(teamOne.name ?? "") has to approve an older match first.")
+        } else if teamTwoMatches.count > 0 {
+            return Response(redirect: "/matches/approve").flash(.error, "The team \(teamTwo.name ?? "") has to approve an older match first.")
+        }
         
         let teamOnePoints = teamOne.score
         let teamTwoPoints = teamTwo.score
