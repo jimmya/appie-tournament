@@ -13,7 +13,7 @@ final class MatchesController: ResourceRepresentable {
     func index(request: Request) throws -> ResponseRepresentable {
         if request.accept.prefers("html") {
             return try renderer.make("matches", [
-                "matches": Match.query().filter("approved", true).all().makeNode()
+                "matches": Match.query().filter("approved", true).sort("timestamp", .descending).all().makeNode()
                 ], for: request)
         }
         return try Match.all().makeNode().converted(to: JSON.self)
