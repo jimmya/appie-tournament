@@ -25,7 +25,7 @@ struct Match: Model {
         }
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "nl")
-        dateFormatter.dateFormat = "MM-dd-yyyy HH:mm"
+        dateFormatter.dateFormat = "dd-MM-yyyy HH:mm"
         let date = Date(timeIntervalSince1970: timestamp + 7200)
         return dateFormatter.string(from: date)
     }

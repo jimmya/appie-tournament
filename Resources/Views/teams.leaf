@@ -25,7 +25,7 @@
   #loop(teams, "team") {
           <tr>
 						<td>#(team.position)</td>
-            <td>#(team.name)</td>
+            <td><strong>#(team.name)</strong></td>
 						<td>#(team.memberNames)</td>
             <td>#(team.score)</td>
           </tr>
