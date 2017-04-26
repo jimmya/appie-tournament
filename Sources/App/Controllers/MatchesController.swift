@@ -93,10 +93,11 @@ extension MatchesController {
         if !user.admin {
             let team = try user.team()
             guard (match.teamOneId == team.id || match.teamTwoId == team.id) else {
-                return Response(redirect: "/matches/pending").flash(.success, "This match can't be deleted")
+                return Response(redirect: "/matches/pending").flash(.error, "This match can't be deleted")
             }
         }
-        return Response(redirect: "/matches/pending").flash(.error, "Unable to delete match")
+        try match.delete()
+        return Response(redirect: "/matches/pending").flash(.success, "The match has been deleted")
     }
 }
 
