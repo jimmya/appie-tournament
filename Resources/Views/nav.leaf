@@ -19,7 +19,7 @@
   #if(request.storage.hasteam) {
     #raw() {
       <li><a href="/matches/add">Add match</a></li>
-      <li><a href="/matches/approve">Approve matches</a></li>
+      <li><a href="/matches/pending">Pending matches</a></li>
     }
   }
   #if(request.storage.admin) {

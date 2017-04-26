@@ -18,6 +18,7 @@ struct Match: Model {
     var teamTwoScore: Int
     var timestamp: TimeInterval?
     var approved: Bool
+    var canApprove: Bool = false
 
     var dateString: String {
         guard let timestamp = timestamp else {
@@ -92,6 +93,7 @@ extension Match: NodeConvertible {
             matchNode["team_one_name"] = teamOneName.makeNode()
             matchNode["team_two_name"] = teamTwoName.makeNode()
             matchNode["date"] = dateString.makeNode()
+            matchNode["can_approve"] = canApprove.makeNode()
         }
         return matchNode
     }

@@ -34,8 +34,9 @@ public func configureRoutes<T : Routing.RouteBuilder>(router: T, configuration: 
         matches.group(RedirectMiddleware(), closure: { (matchesRedirectRouter) in
             matchesRedirectRouter.get("add", handler: matchesController.getAdd)
             matchesRedirectRouter.post("add", handler: matchesController.add)
-            matchesRedirectRouter.get("approve", handler: matchesController.getApprove)
+            matchesRedirectRouter.get("pending", handler: matchesController.getPending)
             matchesRedirectRouter.post(Match.self, "approve", handler: matchesController.approve)
+            matchesRedirectRouter.post(Match.self, "delete", handler: matchesController.delete)
         })
     }
     

@@ -19,6 +19,7 @@
 						<th>Team 2:</th>
             <th>Team 2 score:</th>
 						<th>Approve</th>
+						<th>Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -29,7 +30,12 @@
             <td>#(match.team_one_score)</td>
 						<td>#(match.team_two_name)</td>
             <td>#(match.team_two_score)</td>
-						<td><form method="POST" action="/matches/#(match.id)/approve"><button type="submit" class="btn btn-default">Approve</button></form></td>
+						<td>
+							#if(match.can_approve) {
+								<form method="POST" action="/matches/#(match.id)/approve"><button type="submit" class="btn btn-default">Approve</button></form>
+							}
+						</td>
+						<td><form method="POST" action="/matches/#(match.id)/delete"><button type="submit" class="btn btn-default">Delete</button></form></td>
           </tr>
   }
   #raw() {
