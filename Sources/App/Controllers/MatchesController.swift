@@ -12,8 +12,16 @@ final class MatchesController: ResourceRepresentable {
     
     func index(request: Request) throws -> ResponseRepresentable {
         if request.accept.prefers("html") {
+            let matches = try Match.query().filter("approved", true).sort("timestamp", .ascending).all()
+            let teams = try Team.all()
+            let recalculatedMatches = try matches.map({ (match) -> Match in
+                var mutableMatch = match
+                mutableMatch.teamOneScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamOneId, allMatches: matches, teams: teams)
+                mutableMatch.teamTwoScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamTwoId, allMatches: matches, teams: teams)
+                return mutableMatch
+            })
             return try renderer.make("matches", [
-                "matches": Match.query().filter("approved", true).sort("timestamp", .descending).all().makeNode()
+                "matches": recalculatedMatches.reversed().makeNode()
                 ], for: request)
         }
         return try Match.all().makeNode().converted(to: JSON.self)
@@ -144,23 +152,11 @@ extension MatchesController {
         
         let approve = request.data["approve"]?.int ?? 0
         if user.admin && approve == 1 {
-            guard let teamOneId = match.teamOneId,
-                let teamTwoId = match.teamTwoId else {
-                    throw Abort.serverError
-            }
-            guard var teamOne = try Team.find(teamOneId),
-                var teamTwo = try Team.find(teamTwoId) else {
-                    throw Abort.notFound
-            }
-            
-            let teamOnePoints = teamOne.score
-            let teamTwoPoints = teamTwo.score
-            try teamOne.updateScore(result: match.teamOneResult, otherTeamScore: teamTwoPoints)
-            try teamTwo.updateScore(result: match.teamTwoResult, otherTeamScore: teamOnePoints)
-            
             var mutableMatch = match
             mutableMatch.approved = true
             try mutableMatch.save()
+            
+            try recalculateMatches()
         }
         
         if request.accept.prefers("html") {
@@ -172,25 +168,77 @@ extension MatchesController {
 
 extension MatchesController {
     
-    func recalculateMatches() throws {
-        let matches = try Match.query().filter("approved", true.makeNode()).sort("timestamp", .ascending).all()
-        for team in try Team.all() {
+    func calculateTeamScoresUntilMatchWithId(matchId: Node?, includeMatch: Bool = false, teams: [Team], matches: [Match]) throws -> [Team] {
+        var recalculatedTeams = teams.map({ (team) -> Team in
             var mutableTeam = team
             mutableTeam.exists = true
             mutableTeam.score = 0
-            try mutableTeam.save()
-        }
+            return mutableTeam
+        })
         for currentMatch in matches {
-            guard let currentTeamOneId = currentMatch.teamOneId,
-                let currentTeamTwoId = currentMatch.teamTwoId,
-                var currentTeamOne = try Team.find(currentTeamOneId),
-                var currentTeamTwo = try Team.find(currentTeamTwoId) else {
+            if currentMatch.id == matchId && !includeMatch {
+                break
+            }
+            guard var teamOne = team(withId: currentMatch.teamOneId, fromArray: recalculatedTeams),
+                var teamTwo = team(withId: currentMatch.teamTwoId, fromArray: recalculatedTeams) else {
                     continue
             }
-            let teamTwoScore = currentTeamTwo.score
-            let teamOneScore = currentTeamOne.score
-            try currentTeamOne.updateScore(result: currentMatch.teamOneResult, otherTeamScore: teamTwoScore)
-            try currentTeamTwo.updateScore(result: currentMatch.teamTwoResult, otherTeamScore: teamOneScore)
+            let teamTwoScore = teamTwo.score
+            let teamOneScore = teamOne.score
+            try teamOne.updateScore(result: currentMatch.teamOneResult, otherTeamScore: teamTwoScore)
+            try teamTwo.updateScore(result: currentMatch.teamTwoResult, otherTeamScore: teamOneScore)
+            recalculatedTeams = updateTeam(team: teamOne, inArray: recalculatedTeams)
+            recalculatedTeams = updateTeam(team: teamTwo, inArray: recalculatedTeams)
+            if currentMatch.id == matchId && includeMatch {
+                break
+            }
+        }
+        return recalculatedTeams
+    }
+    
+    func recalculateMatches() throws {
+        let matches = try Match.query().filter("approved", true.makeNode()).sort("timestamp", .ascending).all()
+        let teams = try Team.all()
+        let recalculatedTeams = try calculateTeamScoresUntilMatchWithId(matchId: nil, teams: teams, matches: matches)
+        try recalculatedTeams.forEach { (team) in
+            var mutableTeam = team
+            mutableTeam.exists = true
+            try mutableTeam.save()
+        }
+    }
+    
+    func pointsChangeForMatch(withId matchId: Node?, forTeamWithId teamId: Node?, allMatches matches: [Match], teams: [Team]) throws -> Int {
+        let recalculatedTeamsPreMatch = try calculateTeamScoresUntilMatchWithId(matchId: matchId, teams: teams, matches: matches)
+        let recalculatedTeamsPostMatch = try calculateTeamScoresUntilMatchWithId(matchId: matchId, includeMatch: true, teams: teams, matches: matches)
+        var teamScoreChange = 0
+        for team in recalculatedTeamsPostMatch {
+            if team.id == teamId {
+                teamScoreChange = Int(team.score)
+                break
+            }
+        }
+        for team in recalculatedTeamsPreMatch {
+            if team.id == teamId {
+                teamScoreChange -= Int(team.score)
+                break
+            }
+        }
+        return teamScoreChange
+    }
+    
+    func team(withId teamId: Node?, fromArray teams: [Team]) -> Team? {
+        return teams.filter({ (team) -> Bool in
+            return team.id == teamId
+        }).first
+    }
+    
+    func updateTeam(team: Team, inArray teams: [Team]) -> [Team] {
+        return teams.map { (currentTeam) -> Team in
+            var mutableCurrentTeam = currentTeam
+            if mutableCurrentTeam.id == team.id {
+                mutableCurrentTeam.score = team.score
+            }
+            return mutableCurrentTeam
         }
     }
 }

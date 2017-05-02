@@ -57,3 +57,7 @@ body {
 #mainContent {
     padding: 40px 15px;
 }
+
+.scorechange {
+  color: #AAAAAA;
+}

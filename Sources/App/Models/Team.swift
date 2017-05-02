@@ -83,7 +83,6 @@ extension Team {
         case .Draw:
             score += 25 + (max(0.0, otherTeamScore - score) / 3)
         }
-        try save()
     }
 }
 

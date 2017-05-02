@@ -24,9 +24,17 @@
   }
   #loop(matches, "match") {
           <tr>
-            <td>#(match.team_one_name)</td>
+            <td>#(match.team_one_name)
+							#if(match.team_one_score_change) {
+								<span class="scorechange">(+#(match.team_one_score_change))</span>
+							}
+						</td>
             <td>#(match.team_one_score) - #(match.team_two_score)</td>
-						<td>#(match.team_two_name)</td>
+						<td>#(match.team_two_name)
+							#if(match.team_two_score_change) {
+								<span class="scorechange">(+#(match.team_two_score_change))</span>
+							}
+						</td>
 						<td>#(match.date)</td>
           </tr>
   }
