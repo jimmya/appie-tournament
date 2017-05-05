@@ -59,6 +59,9 @@ extension User: Model {
             userNode["admin"] = admin.makeNode()
             break
         default:
+            do {
+                userNode["teamId"] = try team().id
+            }
             break
         }
         return userNode
