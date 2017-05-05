@@ -61,6 +61,8 @@ extension User: Model {
         default:
             do {
                 userNode["teamId"] = try team().id
+            } catch {
+                
             }
             break
         }

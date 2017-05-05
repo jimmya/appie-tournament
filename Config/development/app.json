@@ -1,5 +1,5 @@
 {
-	"signing_secret": "3eW6DASn5mKY1inNcTFHsqPLvonfbRm2BLVh3lHzctodzYTgjAvBqtYvZ1Pm6A0i",
+	"signing_secret": "1D32212EBE935A8853991AC17D492",
 	"token_valid_duration": 3600,
     "cookie_valid_duration": 2592000,
 	"refresh_token_valid_duration": 30758400,
