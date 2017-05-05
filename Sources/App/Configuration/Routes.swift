@@ -53,12 +53,16 @@ public func configureRoutes<T : Routing.RouteBuilder>(router: T, configuration: 
     
     let teamsController = TeamsController(renderer: renderer)
     router.resource("teams", teamsController)
+    router.group("teams") { (teams) in
+        teams.get("all", handler: teamsController.getAll)
+    }
     
     let usersController = UsersController(renderer: renderer, logger: logger)
     router.resource("users", usersController)
     router.group("users") { (users) in
         users.post("login", handler: usersController.login)
         users.get("login", handler: usersController.getLogin)
+        users.post("refresh", handler: usersController.refreshToken)
         users.get("logout", handler: usersController.logout)
         users.get("resetpassword", handler: usersController.getResetPassword)
         users.post("resetpassword", handler: usersController.resetPassword)
@@ -75,10 +79,24 @@ public func configurePreparations(preparations: inout [Preparation.Type]) {
     preparations.append(User.self)
     preparations.append(Pivot<User, Team>.self)
     preparations.append(UserSession.self)
+    preparations.append(RefreshToken.self)
 }
 
 public func configureMiddleware(middleware: inout [Middleware]) {
     middleware.append(FlashMiddleware())
     middleware.append(AuthMiddleware(user: User.self))
     middleware.append(AuthenticatedMiddleware())
+}
+
+extension Request {
+    
+    func respondWithMessage(message: String, redirect: String, status: Status, flashType: Flash.Helper.FlashType) throws -> ResponseRepresentable {
+        if accept.prefers("html") {
+            return Response(redirect: redirect).flash(flashType, message)
+        }
+        if flashType == .success || flashType == .info {
+            return message
+        }
+        throw Abort.custom(status: status, message: message)
+    }
 }

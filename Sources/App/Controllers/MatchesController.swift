@@ -11,20 +11,20 @@ final class MatchesController: ResourceRepresentable {
     }
     
     func index(request: Request) throws -> ResponseRepresentable {
+        let matches = try Match.query().filter("approved", true).sort("timestamp", .ascending).all()
+        let teams = try Team.all()
+        let recalculatedMatches = try matches.map({ (match) -> Match in
+            var mutableMatch = match
+            mutableMatch.teamOneScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamOneId, allMatches: matches, teams: teams)
+            mutableMatch.teamTwoScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamTwoId, allMatches: matches, teams: teams)
+            return mutableMatch
+        })
         if request.accept.prefers("html") {
-            let matches = try Match.query().filter("approved", true).sort("timestamp", .ascending).all()
-            let teams = try Team.all()
-            let recalculatedMatches = try matches.map({ (match) -> Match in
-                var mutableMatch = match
-                mutableMatch.teamOneScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamOneId, allMatches: matches, teams: teams)
-                mutableMatch.teamTwoScoreChange = try pointsChangeForMatch(withId: match.id, forTeamWithId: match.teamTwoId, allMatches: matches, teams: teams)
-                return mutableMatch
-            })
             return try renderer.make("matches", [
                 "matches": recalculatedMatches.reversed().makeNode()
                 ], for: request)
         }
-        return try Match.all().makeNode().converted(to: JSON.self)
+        return try recalculatedMatches.makeNode().converted(to: JSON.self)
     }
     
     func show(request: Request, match: Match) throws -> ResponseRepresentable {
@@ -83,7 +83,7 @@ extension MatchesController {
         if !user.admin {
             let team = try user.team()
             guard (match.teamOneId == team.id || match.teamTwoId == team.id) else {
-                return Response(redirect: "/matches/pending").flash(.success, "This match can't be approved")
+                return try request.respondWithMessage(message: "This match can't be approved", redirect: "/matches/pending", status: .badRequest, flashType: .error)
             }
         }
         
@@ -93,7 +93,7 @@ extension MatchesController {
         
         try recalculateMatches()
         
-        return Response(redirect: "/matches").flash(.success, "The match has been approved")
+        return try request.respondWithMessage(message: "The match has been approved", redirect: "/matches", status: .ok, flashType: .success)
     }
     
     func delete(request: Request, match: Match) throws -> ResponseRepresentable {
@@ -101,11 +101,12 @@ extension MatchesController {
         if !user.admin {
             let team = try user.team()
             guard (match.teamOneId == team.id || match.teamTwoId == team.id) else {
-                return Response(redirect: "/matches/pending").flash(.error, "This match can't be deleted")
+                return try request.respondWithMessage(message: "This match can't be deleted", redirect: "/matches/pending", status: .badRequest, flashType: .error)
             }
         }
         try match.delete()
-        return Response(redirect: "/matches/pending").flash(.success, "The match has been deleted")
+        
+        return try request.respondWithMessage(message: "The match has been deleted", redirect: "/matches/pending", status: .ok, flashType: .success)
     }
 }
 
@@ -121,17 +122,21 @@ extension MatchesController {
         if user.admin {
             teams = try Team.query().sort("id", .ascending).all().makeNode()
         }
-        return try renderer.make("addmatch", [
-            "userteam": team.makeNode(),
-            "teams": teams
-            ], for: request)
+        
+        if request.accept.prefers("html") {
+            return try renderer.make("addmatch", [
+                "userteam": team.makeNode(),
+                "teams": teams
+                ], for: request)
+        }
+        return try teams.makeNode().converted(to: JSON.self)
     }
     
     func add(request: Request) throws -> ResponseRepresentable {
         let user = try request.user()
         guard let teamOneId = try request.data["team1"]?.int?.makeNode(),
             let teamTwoId = try request.data["team2"]?.int?.makeNode() else {
-                throw Abort.badRequest
+                return try request.respondWithMessage(message: "Something went wrong", redirect: "/matches", status: .badRequest, flashType: .error)
         }
         
         let teamOneScore = request.data["team1score"]?.int ?? 0
@@ -140,11 +145,11 @@ extension MatchesController {
             try Score.validate(input: teamOneScore)
             try Score.validate(input: teamTwoScore)
         } catch {
-            return Response(redirect: "/matches").flash(.error, "Invalid scores")
+            return try request.respondWithMessage(message: "Invalid scores", redirect: "/matches", status: .badRequest, flashType: .error)
         }
         
         if teamOneId.int == teamTwoId.int {
-            return Response(redirect: "/matches").flash(.error, "Teams can't match")
+            return try request.respondWithMessage(message: "Teams can't match", redirect: "/matches", status: .badRequest, flashType: .error)
         }
         
         var match = Match(teamOneId: teamOneId, teamTwoId: teamTwoId, teamOneScore: teamOneScore, teamTwoScore: teamTwoScore)
@@ -159,10 +164,7 @@ extension MatchesController {
             try recalculateMatches()
         }
         
-        if request.accept.prefers("html") {
-            return Response(redirect: "/teams").flash(.success, "The match has been added")
-        }
-        return match
+        return try request.respondWithMessage(message: "The match has been added", redirect: "/teams", status: .ok, flashType: .success)
     }
 }
 

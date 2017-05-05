@@ -81,13 +81,13 @@ extension Match: NodeConvertible {
             "id": id,
             "team_one_score": teamOneScore,
             "team_two_score": teamTwoScore,
-            "approved": approved
+            "approved": approved,
+            "timestamp": (timestamp ?? Date().timeIntervalSince1970).makeNode()
             ])
         switch context {
         case is DatabaseContext:
             matchNode["team_one_id"] = teamOneId
             matchNode["team_two_id"] = teamTwoId
-            matchNode["timestamp"] = (timestamp ?? Date().timeIntervalSince1970).makeNode()
         default:
             guard let teamOneName = try Team.find(teamOneId!)?.name,
                 let teamTwoName = try Team.find(teamTwoId!)?.name else {

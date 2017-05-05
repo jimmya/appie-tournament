@@ -25,6 +25,10 @@ final class TeamsController: ResourceRepresentable {
         return try sortedTeams.makeNode().converted(to: JSON.self).makeResponse()
     }
     
+    func getAll(request: Request) throws -> ResponseRepresentable {
+        return try Team.query().all().makeNode().converted(to: JSON.self).makeResponse()
+    }
+    
     func makeResource() -> Resource<Team> {
         return Resource(
             index: index
