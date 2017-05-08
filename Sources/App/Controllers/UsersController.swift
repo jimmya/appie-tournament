@@ -275,6 +275,34 @@ extension UsersController {
     }
 }
 
+extension UsersController {
+    
+    func registerPushToken(request: Request) throws -> ResponseRepresentable {
+        guard let token = request.data["token"]?.string else {
+            return try request.respondWithMessage(message: "Invalid request.", redirect: "", status: .badRequest, flashType: .error)
+        }
+        let user = try request.user()
+        if try user.pushTokens().filter("token", token).count() > 0 {
+            return try request.respondWithMessage(message: "Token allready registered.", redirect: "", status: .notModified, flashType: .success)
+        }
+        var pushToken = PushToken(token: token, userId: user.id)
+        try pushToken.save()
+        return try request.respondWithMessage(message: "Token has been saved.", redirect: "", status: .ok, flashType: .success)
+    }
+    
+    func deletePushToken(request: Request) throws -> ResponseRepresentable {
+        guard let token = request.data["token"]?.string else {
+            return try request.respondWithMessage(message: "Invalid request.", redirect: "", status: .badRequest, flashType: .error)
+        }
+        let user = try request.user()
+        guard let pushToken = try user.pushTokens().filter("token", contains: token).first() else {
+            return try request.respondWithMessage(message: "Token not found.", redirect: "", status: .notFound, flashType: .error)
+        }
+        try pushToken.delete()
+        return try request.respondWithMessage(message: "Token has been deleted.", redirect: "", status: .ok, flashType: .success)
+    }
+}
+
 private extension UsersController {
     
     func returnToken(request: Request, user: User) throws -> ResponseRepresentable {

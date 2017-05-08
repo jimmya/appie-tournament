@@ -17,6 +17,10 @@ public struct Configuration {
         self.viewRenderer = viewRenderer
         self.localization = localization
         self.logger = logger
+        
+//        let notificationsAppId = "com.jimmy.Appie-Tournament"
+//        let apnsKeyIdentifier = "YWTTXH2V72"
+//        let apnsTeamIdentifier = "GNY93HF8FU"
     }
 }
 
@@ -70,6 +74,8 @@ public func configureRoutes<T : Routing.RouteBuilder>(router: T, configuration: 
         users.post("requestresetpassword", handler: usersController.requestResetPassword)
         users.get("confirmemail", handler: usersController.confirmEmail)
         users.get("requestconfirmemail", handler: usersController.requestConfirmEmail)
+        users.post("pushtoken", handler: usersController.registerPushToken)
+        users.delete("pushtoken", handler: usersController.deletePushToken)
     }
 }
 
@@ -80,6 +86,7 @@ public func configurePreparations(preparations: inout [Preparation.Type]) {
     preparations.append(Pivot<User, Team>.self)
     preparations.append(UserSession.self)
     preparations.append(RefreshToken.self)
+    preparations.append(PushToken.self)
 }
 
 public func configureMiddleware(middleware: inout [Middleware]) {

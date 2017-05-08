@@ -44,6 +44,13 @@ extension User {
     }
 }
 
+extension User {
+    
+    func pushTokens() throws -> Children<PushToken> {
+        return children()
+    }
+}
+
 extension User: Model {
     
     func makeNode(context: Context) throws -> Node {
