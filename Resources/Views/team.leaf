@@ -1,0 +1,54 @@
+#extend("base")
+
+#export("head") {
+	<title>Tournament</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,300" rel="stylesheet">
+	<link rel="stylesheet" href="/styles/app.css">
+}
+
+#export("body") {
+  #raw() {
+      <div class="container-fluid">
+	}
+        <h3>#(team.name)</h3>
+				<strong>Score:</strong> #(team.score)
+	#raw() {
+				<h4>Members</h4>
+      <table class="table table-striped">
+        <tbody>
+  }
+  #loop(team.members, "member") {
+          <tr>
+            <td>#(member.username)</td>
+          </tr>
+  }
+  #raw() {
+        </tbody>
+      </table>
+			<h4>Matches</h4>
+    	<table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Team 1:</th>
+            <th>Result:</th>
+            <th>Team 2:</th>
+						<th>Date:</th>
+          </tr>
+        </thead>
+        <tbody>
+  }
+  #loop(matches, "match") {
+	        <tr>
+	          <td>#(match.team_one_name)</td>
+	          <td>#(match.team_one_score) - #(match.team_two_score)</td>
+						<td>#(match.team_two_name)</td>
+						<td>#(match.date)</td>
+	        </tr>
+  }
+	#raw() {
+        </tbody>
+      </table>
+    </div>
+  }
+}

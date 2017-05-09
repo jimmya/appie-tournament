@@ -4,6 +4,8 @@ import Vapor
 import Auth
 import Fluent
 import Flash
+import Foundation
+import VaporAPNS
 
 public struct Configuration {
     
@@ -21,6 +23,14 @@ public struct Configuration {
 //        let notificationsAppId = "com.jimmy.Appie-Tournament"
 //        let apnsKeyIdentifier = "YWTTXH2V72"
 //        let apnsTeamIdentifier = "GNY93HF8FU"
+        
+        do {
+            var options = try Options(topic: "com.jimmy.Appie-Tournament", teamId: "GNY93HF8FU", keyId: "YWTTXH2V72", keyPath: "\(Droplet().resourcesDir)/Certificates/APNS.p8")
+            options.disableCurlCheck = true
+            let vaporAPNS = try VaporAPNS(options: options)
+        } catch let e {
+            print(e)
+        }
     }
 }
 

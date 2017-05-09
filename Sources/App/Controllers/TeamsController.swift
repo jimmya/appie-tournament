@@ -25,13 +25,28 @@ final class TeamsController: ResourceRepresentable {
         return try sortedTeams.makeNode().converted(to: JSON.self).makeResponse()
     }
     
+    func show(request: Request, team: Team) throws -> ResponseRepresentable {
+        if request.accept.prefers("html") {
+            guard let teamId = team.id else {
+                return Response(redirect: "/teams").flash(.error, "Something went wrong please try again")
+            }
+            let matches = try Match.query().or({ (query) in
+                try query.filter("team_one_id", teamId)
+                try query.filter("team_two_id", teamId)
+            }).filter("approved", true.makeNode()).sort("timestamp", .descending).all().makeNode()
+            return try renderer.make("team", ["team": team, "matches": matches], for: request)
+        }
+        return team
+    }
+    
     func getAll(request: Request) throws -> ResponseRepresentable {
         return try Team.query().all().makeNode().converted(to: JSON.self).makeResponse()
     }
     
     func makeResource() -> Resource<Team> {
         return Resource(
-            index: index
+            index: index,
+            show: show
         )
     }
 }

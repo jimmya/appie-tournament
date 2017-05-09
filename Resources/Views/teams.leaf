@@ -18,6 +18,7 @@
             <th>Team</th>
 						<th>Members</th>
             <th>Score</th>
+						<th></th>
           </tr>
         </thead>
         <tbody>
@@ -28,6 +29,7 @@
             <td><strong>#(team.name)</strong></td>
 						<td>#(team.memberNames)</td>
             <td>#(team.score)</td>
+						<td><a class="btn btn-default" href="/teams/#(team.id)" role="button">View details</a></td>
           </tr>
   }
   #raw() {
