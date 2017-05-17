@@ -26,17 +26,20 @@ final class TeamsController: ResourceRepresentable {
     }
     
     func show(request: Request, team: Team) throws -> ResponseRepresentable {
-        if request.accept.prefers("html") {
-            guard let teamId = team.id else {
-                return Response(redirect: "/teams").flash(.error, "Something went wrong please try again")
-            }
-            let matches = try Match.query().or({ (query) in
-                try query.filter("team_one_id", teamId)
-                try query.filter("team_two_id", teamId)
-            }).filter("approved", true.makeNode()).sort("timestamp", .descending).all().makeNode()
-            return try renderer.make("team", ["team": team, "matches": matches], for: request)
+        guard let teamId = team.id else {
+            return Response(redirect: "/teams").flash(.error, "Something went wrong please try again")
         }
-        return team
+        var mutableTeam = team
+        let matches = try Match.query().or({ (query) in
+            try query.filter("team_one_id", teamId)
+            try query.filter("team_two_id", teamId)
+        }).filter("approved", true.makeNode()).sort("timestamp", .descending).all()
+        mutableTeam.matches = matches
+        if request.accept.prefers("html") {
+            return try renderer.make("team", ["team": mutableTeam.makeNode(), "matches": matches.makeNode()], for: request)
+        } else {
+            return try mutableTeam.makeNode().converted(to: JSON.self).makeResponse()
+        }
     }
     
     func getAll(request: Request) throws -> ResponseRepresentable {

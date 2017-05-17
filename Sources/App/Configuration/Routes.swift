@@ -12,25 +12,16 @@ public struct Configuration {
     public let viewRenderer: Vapor.ViewRenderer
     public let localization: Vapor.Localization
     public let logger: LogProtocol
+    public var apns: VaporAPNS?
     
     public init(viewRenderer: Vapor.ViewRenderer,
                 localization: Vapor.Localization,
-                logger: LogProtocol) {
+                logger: LogProtocol,
+                apns: VaporAPNS?) {
         self.viewRenderer = viewRenderer
         self.localization = localization
         self.logger = logger
-        
-//        let notificationsAppId = "com.jimmy.Appie-Tournament"
-//        let apnsKeyIdentifier = "YWTTXH2V72"
-//        let apnsTeamIdentifier = "GNY93HF8FU"
-        
-        do {
-            var options = try Options(topic: "com.jimmy.Appie-Tournament", teamId: "GNY93HF8FU", keyId: "YWTTXH2V72", keyPath: "\(Droplet().resourcesDir)/Certificates/APNS.p8")
-            options.disableCurlCheck = true
-            let vaporAPNS = try VaporAPNS(options: options)
-        } catch let e {
-            print(e)
-        }
+        self.apns = apns
     }
 }
 

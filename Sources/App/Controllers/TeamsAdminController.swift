@@ -91,7 +91,7 @@ extension TeamsAdminController {
         guard let name = request.data["name"]?.string else {
             return Response(redirect: "/admin/teams/add").flash(.error, "Please fill in all fields")
         }
-        var team = Team(id: nil, name: name, score: 0, position: 0, exists: false)
+        var team = Team(id: nil, name: name, score: 0, position: 0, matches: nil, exists: false)
         try team.save()
         return Response(redirect: "/admin/teams").flash(.success, "Team has been added")
     }

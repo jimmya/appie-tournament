@@ -9,6 +9,7 @@ struct Team: Model {
     var name: String?
     var score: Double
     var position: Int = 0
+    var matches: [Match]?
     
     // used by fluent internally
     var exists: Bool = false
@@ -40,6 +41,9 @@ extension Team: NodeConvertible {
             teamNode["members"] = try members.makeNode()
             teamNode["position"] = try position.makeNode()
             teamNode["memberNames"] = memberNames.makeNode()
+            if let matches = matches {
+                teamNode["matches"] = try matches.makeNode()
+            }
         }
         return teamNode
     }

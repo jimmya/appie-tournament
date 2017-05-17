@@ -1,1 +1,1 @@
-web: Executable --env=test --workdir=./ --config:servers.default.port=$PORT --config:postgresql.url=$DATABASE_URL
+web: Executable --env=test --workdir=./ --config:servers.default.port=$PORT --config:postgresql.url=$DATABASE_URL --config:apns.topic=$APNS_TOPIC --config:apns.teamId=$APNS_TEAM_ID --config:apns.keyId=$APNS_KEY_ID
